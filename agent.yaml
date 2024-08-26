@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-agent
+  namespace: jenkins
+  labels:
+    app: jenkins
+    role: agent
+spec:
+  replicas: 2  # Number of agent instances
+  selector:
+    matchLabels:
+      app: jenkins
+      role: agent
+  template:
+    metadata:
+      labels:
+        app: jenkins
+        role: agent
+        jenkins: slave
+    spec:
+      serviceAccountName: jenkins-agent-sa 
+      containers:
+        - name: jenkins-agent
+          image: maven:3.8.4-openjdk-11  # Example image, customize as needed
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "sleep infinity"
+          volumeMounts:
+            - name: workspace
+              mountPath: /home/jenkins/agent
+          env:
+            - name: JENKINS_URL
+              value: "http://jenkins-agent-service:50000"  # URL of your Jenkins master
+            - name: JENKINS_AGENT_NAME
+              value: "jenkins-agent"
+      volumes:
+        - name: workspace
+          emptyDir: {}
+      restartPolicy: Always
